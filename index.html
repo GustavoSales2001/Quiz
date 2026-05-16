@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Quiz | Estude nos EUA</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <main class="quiz-container">
+
+    <section id="start-screen">
+      <span class="badge">Análise rápida</span>
+
+      <h1>Descubra seu caminho para estudar nos EUA</h1>
+
+      <p class="subtitle">
+        Responda 5 perguntas rápidas para entendermos se seu perfil combina com bolsa,
+        esporte, inglês ou universidade.
+      </p>
+
+      <button class="btn-primary" onclick="startQuiz()">Começar agora</button>
+
+      <p class="small-text">
+        A análise inicial não garante bolsa, aprovação ou visto. Ela serve para direcionar seu atendimento.
+      </p>
+    </section>
+
+    <section id="quiz-screen" class="hidden">
+      <div class="progress">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <p id="question-number" class="question-number"></p>
+
+      <h2 id="question-title" class="question-title"></h2>
+
+      <div id="options" class="options"></div>
+
+      <div class="buttons">
+        <button id="back-button" class="btn-secondary" onclick="goBack()">Voltar</button>
+        <button id="next-button" class="btn-primary" onclick="goNext()">Próxima</button>
+      </div>
+    </section>
+
+    <section id="lead-screen" class="hidden">
+      <div class="progress">
+        <div class="progress-bar full"></div>
+      </div>
+
+      <h2 class="question-title">Para onde podemos enviar sua análise?</h2>
+
+      <div class="form-group">
+        <label for="name">Nome</label>
+        <input type="text" id="name" placeholder="Seu nome" />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">WhatsApp</label>
+        <input type="tel" id="phone" placeholder="Seu WhatsApp com DDD" />
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" placeholder="Seu melhor e-mail" />
+      </div>
+
+      <button class="btn-primary" onclick="submitLead()">Ver meu caminho recomendado</button>
+
+      <p class="small-text">
+        Seus dados serão usados para contato sobre as possibilidades de estudo nos EUA.
+      </p>
+    </section>
+
+    <section id="result-screen" class="hidden">
+      <div class="result-box">
+        <div id="result-title" class="result-title"></div>
+        <p id="result-text" class="result-text"></p>
+      </div>
+
+     <p class="subtitle">
+    Recebemos suas respostas com sucesso.
+    </p>
+
+    <p class="subtitle">
+    Agora nossa equipe vai analisar suas informações e direcionar seu perfil para o melhor caminho.
+    </p>
+
+    <p class="small-text">
+    Se fizer sentido avançar para a próxima etapa, entraremos em contato pelo WhatsApp informado.
+    </p>
+
+      <button class="btn-primary" onclick="restartQuiz()">Refazer análise</button>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
