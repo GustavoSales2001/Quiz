@@ -34,9 +34,9 @@ app.post("/api/leads", async (req, res) => {
     // Salva o lead no MySQL, se o banco estiver configurado.
     await saveLeadToDatabase(lead);
 
-    if (lead.enviar_simpledesk === true) {
-      await enviarParaSimpleDesk(lead);
-    }
+
+    await enviarParaSimpleDesk(lead);
+    
 
     // Aqui você também pode enviar para Google Sheets, Airtable, CRM ou webhook.
     await enviarParaWebhookGeral(lead);
