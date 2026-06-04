@@ -60,30 +60,30 @@ app.post("/api/leads", async (req, res) => {
 });
 
 async function enviarParaSimpleDesk(lead) {
-  const SIMPLE_DESK_WEBHOOK_URL = process.env.SIMPLE_DESK_WEBHOOK_URL;
+  const SIMPLEDESK_API_URL = process.env.SIMPLEDESK_API_URL;
+  const SIMPLEDESK_API_KEY = process.env.SIMPLEDESK_API_KEY;
 
-  if (!SIMPLE_DESK_WEBHOOK_URL) {
-    console.log("Webhook do SimpleDesk não configurado.");
+  if (!SIMPLEDESK_API_URL || !SIMPLEDESK_API_KEY) {
+    console.log("API do SimpleDesk não configurada.");
     return;
   }
 
   const payloadSimpleDesk = {
     name: lead.nome,
     phone: lead.whatsapp,
-    email: lead.email,
-    source: lead.origem,
-    campaign: lead.campanha,
-    tag: lead.classificacao,
-    custom_fields: {
-      objetivo: lead.objetivo,
-      interesse_bolsa: lead.interesse_bolsa,
-      prazo: lead.prazo,
-      momento_academico: lead.momento_academico,
-      temperatura: lead.temperatura
-    }
+    email: lead.email
   };
 
-  await axios.post(SIMPLE_DESK_WEBHOOK_URL, payloadSimpleDesk);
+  await axios.post(
+    `${SIMPLEDESK_API_URL}/contacts`,
+    payloadSimpleDesk,
+    {
+      headers: {
+        Authorization: `Bearer ${SIMPLEDESK_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
 
   console.log("Lead enviado para SimpleDesk:", lead.nome);
 }
