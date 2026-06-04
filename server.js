@@ -150,7 +150,7 @@ async function saveLeadToDatabase(lead) {
     lead.temperatura,
     lead.enviar_simpledesk ? 1 : 0,
     JSON.stringify(lead.respostas || {}),
-    lead.created_at || new Date().toISOString()
+    new Date().toISOString().slice(0, 19).replace("T", " ")
   ];
 
   await pool.execute(insertQuery, values);
