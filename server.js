@@ -74,18 +74,23 @@ async function enviarParaSimpleDesk(lead) {
     email: lead.email
   };
 
-  await axios.post(
+  try {
+  const response = await axios.post(
     `${SIMPLEDESK_API_URL}/contacts`,
     payloadSimpleDesk,
     {
       headers: {
-        Authorization: `Bearer ${SIMPLEDESK_API_KEY}`,
+        token: SIMPLEDESK_API_KEY,
         "Content-Type": "application/json"
       }
     }
   );
 
-  console.log("Lead enviado para SimpleDesk:", lead.nome);
+  console.log("Lead enviado para SimpleDesk:", response.data);
+} catch (error) {
+  console.log("STATUS:", error.response?.status);
+  console.log("DATA:", error.response?.data);
+}
 }
 
 async function enviarParaWebhookGeral(lead) {
