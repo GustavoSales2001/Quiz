@@ -46,6 +46,7 @@ const questions = [
 function getConfiguredApiBaseUrl() {
   const configField = document.getElementById("api-base-url");
   const customUrl = configField?.value.trim();
+
   if (customUrl) {
     return customUrl;
   }
@@ -59,10 +60,25 @@ const API_BASE_URL = window.API_BASE_URL || getConfiguredApiBaseUrl();
 
 let currentQuestion = 0;
 let answers = {};
+let startName = "";
 
 function startQuiz() {
+  const startNameField = document.getElementById("start-name");
+  startName = startNameField ? startNameField.value.trim() : "";
+
+  if (!startName) {
+    alert("Por favor, informe seu nome completo para começar.");
+    return;
+  }
+
   document.getElementById("start-screen").classList.add("hidden");
   document.getElementById("quiz-screen").classList.remove("hidden");
+
+  const nameField = document.getElementById("name");
+
+  if (nameField) {
+    nameField.value = startName;
+  }
 
   renderQuestion();
 }
@@ -125,6 +141,12 @@ function goNext() {
   } else {
     document.getElementById("quiz-screen").classList.add("hidden");
     document.getElementById("lead-screen").classList.remove("hidden");
+
+    const nameField = document.getElementById("name");
+
+    if (nameField && startName) {
+      nameField.value = startName;
+    }
   }
 }
 
@@ -137,7 +159,6 @@ function goBack() {
 
 function classifyLead(data) {
   const objetivo = data.objetivo;
-  const bolsa = data.interesse_bolsa;
   const prazo = data.prazo;
 
   let classificacao = "LEAD_INICIAL";
@@ -203,26 +224,46 @@ async function submitLead() {
     return;
   }
 
-  const leadData = {
-    nome: name,
-    whatsapp: phone,
-    email: email,
-    origem: "instagram_ads",
-    campanha: "bolsas_estudo_eua",
-    respostas: answers,
-    ...answers
-  };
-
-  const classification = classifyLead(leadData);
-
-  const payload = {
-    ...leadData,
-    ...classification,
-    created_at: new Date().toISOString()
-  };
-
   try {
-    await fetch(`${API_BASE_URL}/api/leads`, {
+    const checkResponse = await fetch(`${API_BASE_URL}/api/leads/check`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email,
+        whatsapp: phone
+      })
+    });
+
+    const checkResult = await checkResponse.json();
+
+    if (checkResult.exists) {
+      showErrorMessage(
+        "Identificamos que esse e-mail ou WhatsApp já está cadastrado. Se precisar de ajuda, aguarde o contato da nossa equipe."
+      );
+      return;
+    }
+
+    const leadData = {
+      nome: name,
+      whatsapp: phone,
+      email: email,
+      origem: "instagram_ads",
+      campanha: "bolsas_estudo_eua",
+      respostas: answers,
+      ...answers
+    };
+
+    const classification = classifyLead(leadData);
+
+    const payload = {
+      ...leadData,
+      ...classification,
+      created_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/leads`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -230,10 +271,25 @@ async function submitLead() {
       body: JSON.stringify(payload)
     });
 
+    const result = await response.json();
+
+    if (!response.ok) {
+      if (response.status === 409) {
+        showErrorMessage(
+          result.message || "Esse e-mail ou WhatsApp já está cadastrado."
+        );
+        return;
+      }
+
+      throw new Error(result.message || "Erro ao enviar lead.");
+    }
+
     showResult(classification);
   } catch (error) {
     console.error(error);
-    showErrorMessage("Não foi possível enviar suas respostas no momento. Por favor, tente novamente em alguns instantes.");
+    showErrorMessage(
+      "Não foi possível enviar suas respostas no momento. Por favor, tente novamente em alguns instantes."
+    );
   }
 }
 
@@ -269,12 +325,20 @@ function showResult(classification) {
 function restartQuiz() {
   currentQuestion = 0;
   answers = {};
+  startName = "";
 
   document.getElementById("result-screen").classList.add("hidden");
   document.getElementById("start-screen").classList.remove("hidden");
 
+  const startNameField = document.getElementById("start-name");
+
+  if (startNameField) {
+    startNameField.value = "";
+  }
+
   document.getElementById("name").value = "";
   document.getElementById("phone").value = "";
   document.getElementById("email").value = "";
+
   clearErrorMessage();
 }

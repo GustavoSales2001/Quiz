@@ -7,17 +7,21 @@ require("dotenv").config();
 
 const app = express();
 
-const dbConfig = process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_NAME
-  ? {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      waitForConnections: true,
-      connectionLimit: 10
-    }
-  : null;
+const dbConfig =
+  process.env.DB_HOST &&
+  process.env.DB_USER &&
+  process.env.DB_PASSWORD &&
+  process.env.DB_NAME
+    ? {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        waitForConnections: true,
+        connectionLimit: 10
+      }
+    : null;
 
 const pool = dbConfig ? mysql.createPool(dbConfig) : null;
 
@@ -25,20 +29,92 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function normalizePhone(phone) {
+  return String(phone || "").replace(/\D/g, "");
+}
+
+async function checkExistingLead(email, whatsapp) {
+  if (!pool) {
+    return null;
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedPhone = normalizePhone(whatsapp);
+
+  const [rows] = await pool.execute(
+    `
+      SELECT id, nome, email, whatsapp
+      FROM leads
+      WHERE LOWER(email) = ?
+         OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(whatsapp, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') = ?
+      LIMIT 1
+    `,
+    [normalizedEmail, normalizedPhone]
+  );
+
+  return rows.length > 0 ? rows[0] : null;
+}
+
+app.post("/api/leads/check", async (req, res) => {
+  try {
+    const { email, whatsapp } = req.body;
+
+    if (!email || !whatsapp) {
+      return res.status(400).json({
+        exists: false,
+        message: "E-mail e WhatsApp são obrigatórios."
+      });
+    }
+
+    const existingLead = await checkExistingLead(email, whatsapp);
+
+    if (existingLead) {
+      return res.status(200).json({
+        exists: true,
+        message: "Esse e-mail ou WhatsApp já está cadastrado."
+      });
+    }
+
+    return res.status(200).json({
+      exists: false,
+      message: "Cadastro disponível."
+    });
+  } catch (error) {
+    console.error("Erro ao verificar lead:", error.message);
+
+    return res.status(500).json({
+      exists: false,
+      message: "Erro ao verificar lead."
+    });
+  }
+});
+
 app.post("/api/leads", async (req, res) => {
   try {
     const lead = req.body;
 
+    lead.email = normalizeEmail(lead.email);
+    lead.whatsapp = normalizePhone(lead.whatsapp);
+
     console.log("Novo lead recebido:", lead);
 
-    // Salva o lead no MySQL, se o banco estiver configurado.
+    const existingLead = await checkExistingLead(lead.email, lead.whatsapp);
+
+    if (existingLead) {
+      return res.status(409).json({
+        success: false,
+        message: "Esse e-mail ou WhatsApp já está cadastrado."
+      });
+    }
+
     await saveLeadToDatabase(lead);
 
-
     await enviarParaSimpleDesk(lead);
-    
 
-    // Aqui você também pode enviar para Google Sheets, Airtable, CRM ou webhook.
     await enviarParaWebhookGeral(lead);
 
     return res.status(200).json({
@@ -48,7 +124,6 @@ app.post("/api/leads", async (req, res) => {
       temperatura: lead.temperatura,
       enviado_simpledesk: lead.enviar_simpledesk
     });
-
   } catch (error) {
     console.error("Erro ao receber lead:", error.message);
 
@@ -68,6 +143,11 @@ async function enviarParaSimpleDesk(lead) {
     return;
   }
 
+  if (!lead.enviar_simpledesk) {
+    console.log("Lead não marcado para envio ao SimpleDesk.");
+    return;
+  }
+
   const payloadSimpleDesk = {
     name: lead.nome,
     phone: lead.whatsapp,
@@ -75,22 +155,23 @@ async function enviarParaSimpleDesk(lead) {
   };
 
   try {
-  const response = await axios.post(
-    `${SIMPLEDESK_API_URL}/contacts`,
-    payloadSimpleDesk,
-    {
-      headers: {
-        token: SIMPLEDESK_API_KEY,
-        "Content-Type": "application/json"
+    const response = await axios.post(
+      `${SIMPLEDESK_API_URL}/contacts`,
+      payloadSimpleDesk,
+      {
+        headers: {
+          token: SIMPLEDESK_API_KEY,
+          "Content-Type": "application/json"
+        }
       }
-    }
-  );
+    );
 
-  console.log("Lead enviado para SimpleDesk:", response.data);
-} catch (error) {
-  console.log("STATUS:", error.response?.status);
-  console.log("DATA:", error.response?.data);
-}
+    console.log("Lead enviado para SimpleDesk:", response.data);
+  } catch (error) {
+    console.log("Erro ao enviar para SimpleDesk.");
+    console.log("STATUS:", error.response?.status);
+    console.log("DATA:", error.response?.data);
+  }
 }
 
 async function enviarParaWebhookGeral(lead) {
@@ -108,7 +189,7 @@ async function enviarParaWebhookGeral(lead) {
 
 async function initializeDatabase() {
   if (!pool) {
-    console.log("MySQL não configurado. Pulando inicialização do banco de dados.");
+    console.log("MySQL não configurado. Pulando inicialização do banco de dados.\n");
     return;
   }
 
@@ -129,6 +210,7 @@ async function initializeDatabase() {
   `;
 
   await pool.execute(createLeadsTable);
+
   console.log("Tabela leads verificada/criada com sucesso.");
 }
 
@@ -140,15 +222,26 @@ async function saveLeadToDatabase(lead) {
 
   const insertQuery = `
     INSERT INTO leads
-      (nome, whatsapp, email, origem, campanha, classificacao, temperatura, enviar_simpledesk, respostas, created_at)
+      (
+        nome,
+        whatsapp,
+        email,
+        origem,
+        campanha,
+        classificacao,
+        temperatura,
+        enviar_simpledesk,
+        respostas,
+        created_at
+      )
     VALUES
       (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
     lead.nome,
-    lead.whatsapp,
-    lead.email,
+    normalizePhone(lead.whatsapp),
+    normalizeEmail(lead.email),
     lead.origem,
     lead.campanha,
     lead.classificacao,
@@ -159,6 +252,7 @@ async function saveLeadToDatabase(lead) {
   ];
 
   await pool.execute(insertQuery, values);
+
   console.log("Lead salvo no MySQL:", lead.nome);
 }
 

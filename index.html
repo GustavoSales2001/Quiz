@@ -12,21 +12,28 @@
 <body>
   <main class="quiz-container">
 
-    <section id="start-screen">
-      <span class="badge">Análise rápida</span>
+    <div class="top-brand">
+      <img src="logo-matricula-usa.png" alt="Matrícula USA" class="logo" />
+    </div>
 
-      <h1>Descubra seu caminho para estudar nos EUA</h1>
+    <section id="start-screen">
+      <div class="progress">
+        <div class="progress-bar" style="width: 3%;"></div>
+      </div>
+
+      <h1>Descubra as bolsas feitas para você</h1>
 
       <p class="subtitle">
-        Responda perguntas rápidas para entendermos se seu perfil combina com os caminhos
-        inicial, transfer ou cos.
+        Responda algumas perguntas e veja quais oportunidades combinam com
+        o seu perfil, de forma rápida e segura.
       </p>
 
-      <button class="btn-primary" onclick="startQuiz()">Começar agora</button>
+      <div class="form-group">
+        <label for="start-name">Seu Nome Completo *</label>
+        <input type="text" id="start-name" placeholder="Nome e Sobrenome" />
+      </div>
 
-      <p class="small-text">
-        A análise inicial não garante bolsa, aprovação ou visto. Ela serve para direcionar seu atendimento.
-      </p>
+      <button class="btn-primary" onclick="startQuiz()">Começar <span>→</span></button>
     </section>
 
     <section id="quiz-screen" class="hidden">
@@ -83,17 +90,19 @@
         <p id="result-text" class="result-text"></p>
       </div>
 
-     <p class="subtitle">
-    Parabéns — recebemos suas respostas com sucesso!
-    </p>
+      <p class="subtitle">
+        Parabéns — recebemos suas respostas com sucesso!
+      </p>
 
-    <p class="subtitle">
-    Nossa equipe vai analisar suas informações e direcionar seu perfil para o melhor caminho. Se fizer sentido avançar, entraremos em contato pelo WhatsApp informado para orientar as próximas etapas.
-    </p>
+      <p class="subtitle">
+        Nossa equipe vai analisar suas informações e direcionar seu perfil para o melhor caminho.
+        Se fizer sentido avançar, entraremos em contato pelo WhatsApp informado para orientar
+        as próximas etapas.
+      </p>
 
-    <p class="small-text">
-    Agradecemos o interesse e parabenizamos pela iniciativa de dar o primeiro passo rumo à sua inscrição.
-    </p>
+      <p class="small-text">
+        Agradecemos o interesse e parabenizamos pela iniciativa de dar o primeiro passo rumo à sua inscrição.
+      </p>
     </section>
 
   </main>
