@@ -138,8 +138,8 @@ async function enviarParaSimpleDesk(lead) {
   const SIMPLEDESK_API_URL = process.env.SIMPLEDESK_API_URL;
   const SIMPLEDESK_API_KEY = process.env.SIMPLEDESK_API_KEY;
 
-  if (!SIMPLEDESK_API_URL || !SIMPLEDESK_API_KEY) {
-    console.log("API do SimpleDesk não configurada.");
+  if (!SIMPLEDESK_API_URL) {
+    console.log("URL do SimpleDesk não configurada.");
     return;
   }
 
@@ -151,24 +151,33 @@ async function enviarParaSimpleDesk(lead) {
   const payloadSimpleDesk = {
     name: lead.nome,
     phone: lead.whatsapp,
-    email: lead.email
+    email: lead.email,
+    origem: lead.origem,
+    campanha: lead.campanha,
+    classificacao: lead.classificacao,
+    temperatura: lead.temperatura,
+    respostas: lead.respostas
   };
 
   try {
+    const headers = {
+      "Content-Type": "application/json"
+    };
+
+    if (SIMPLEDESK_API_KEY) {
+      headers.token = SIMPLEDESK_API_KEY;
+    }
+
     const response = await axios.post(
-      `${SIMPLEDESK_API_URL}/contacts`,
+      SIMPLEDESK_API_URL,
       payloadSimpleDesk,
-      {
-        headers: {
-          token: SIMPLEDESK_API_KEY,
-          "Content-Type": "application/json"
-        }
-      }
+      { headers }
     );
 
     console.log("Lead enviado para SimpleDesk:", response.data);
   } catch (error) {
     console.log("Erro ao enviar para SimpleDesk.");
+    console.log("URL usada:", SIMPLEDESK_API_URL);
     console.log("STATUS:", error.response?.status);
     console.log("DATA:", error.response?.data);
   }
@@ -182,9 +191,15 @@ async function enviarParaWebhookGeral(lead) {
     return;
   }
 
-  await axios.post(GENERAL_WEBHOOK_URL, lead);
+  try {
+    await axios.post(GENERAL_WEBHOOK_URL, lead);
 
-  console.log("Lead enviado para webhook geral:", lead.nome);
+    console.log("Lead enviado para webhook geral:", lead.nome);
+  } catch (error) {
+    console.log("Erro ao enviar para webhook geral.");
+    console.log("STATUS:", error.response?.status);
+    console.log("DATA:", error.response?.data);
+  }
 }
 
 async function initializeDatabase() {

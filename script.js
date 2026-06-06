@@ -205,6 +205,44 @@ function clearErrorMessage() {
   errorElement.classList.add("hidden");
 }
 
+const loadingSteps = [
+  "Validando dados",
+  "Verificando cadastro",
+  "Gravando no banco",
+  "Enviando para equipe",
+  "Finalizando"
+];
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function showLoading() {
+  document.getElementById("lead-screen").classList.add("hidden");
+  document.getElementById("loading-screen").classList.remove("hidden");
+  updateLoadingStep(0);
+}
+
+function hideLoading() {
+  document.getElementById("loading-screen").classList.add("hidden");
+}
+
+function updateLoadingStep(stepIndex) {
+  const stepElements = Array.from(document.querySelectorAll(".loading-step"));
+  const loadingText = document.getElementById("loading-subtext");
+
+  stepElements.forEach((stepElement, index) => {
+    stepElement.classList.toggle("active", index === stepIndex);
+    stepElement.classList.toggle("complete", index < stepIndex);
+  });
+
+  if (loadingText) {
+    loadingText.innerText = stepIndex < loadingSteps.length
+      ? `${loadingSteps[stepIndex]}...`
+      : "Concluído!";
+  }
+}
+
 function validateLeadFields(name, phone, email) {
   if (!name || !phone || !email) {
     showErrorMessage("Por favor, informe nome, WhatsApp e e-mail para prosseguir.");
@@ -225,6 +263,10 @@ async function submitLead() {
   }
 
   try {
+    showLoading();
+    clearErrorMessage();
+    await sleep(650);
+
     const checkResponse = await fetch(`${API_BASE_URL}/api/leads/check`, {
       method: "POST",
       headers: {
@@ -238,7 +280,12 @@ async function submitLead() {
 
     const checkResult = await checkResponse.json();
 
+    updateLoadingStep(1);
+    await sleep(850);
+
     if (checkResult.exists) {
+      hideLoading();
+      document.getElementById("lead-screen").classList.remove("hidden");
       showErrorMessage(
         "Identificamos que esse e-mail ou WhatsApp já está cadastrado. Se precisar de ajuda, aguarde o contato da nossa equipe."
       );
@@ -263,6 +310,11 @@ async function submitLead() {
       created_at: new Date().toISOString()
     };
 
+    updateLoadingStep(2);
+
+    updateLoadingStep(2);
+    await sleep(650);
+
     const response = await fetch(`${API_BASE_URL}/api/leads`, {
       method: "POST",
       headers: {
@@ -271,9 +323,15 @@ async function submitLead() {
       body: JSON.stringify(payload)
     });
 
+    updateLoadingStep(3);
+    await sleep(850);
+
     const result = await response.json();
 
     if (!response.ok) {
+      hideLoading();
+      document.getElementById("lead-screen").classList.remove("hidden");
+
       if (response.status === 409) {
         showErrorMessage(
           result.message || "Esse e-mail ou WhatsApp já está cadastrado."
@@ -284,9 +342,15 @@ async function submitLead() {
       throw new Error(result.message || "Erro ao enviar lead.");
     }
 
+    updateLoadingStep(4);
+    await sleep(1000);
+
+    hideLoading();
     showResult(classification);
   } catch (error) {
     console.error(error);
+    hideLoading();
+    document.getElementById("lead-screen").classList.remove("hidden");
     showErrorMessage(
       "Não foi possível enviar suas respostas no momento. Por favor, tente novamente em alguns instantes."
     );
