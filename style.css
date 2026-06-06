@@ -2,7 +2,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
@@ -35,7 +35,7 @@ body {
 
 .logo {
   display: block;
-  width: 250px;
+  width: 260px;
   max-width: 100%;
   height: auto;
 }
@@ -67,11 +67,11 @@ body {
 
 h1 {
   font-size: 34px;
-  line-height: 1.15;
+  line-height: 1.2;
   margin-bottom: 14px;
   color: #071528;
   font-weight: 800;
-  letter-spacing: -1px;
+  letter-spacing: -0.25px;
 }
 
 .subtitle {
@@ -167,11 +167,11 @@ button {
 
 .question-title {
   font-size: 30px;
-  line-height: 1.2;
+  line-height: 1.25;
   margin-bottom: 26px;
   color: #071528;
   font-weight: 800;
-  letter-spacing: -0.7px;
+  letter-spacing: -0.25px;
   text-align: center;
 }
 
