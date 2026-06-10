@@ -329,9 +329,27 @@ function updateLoadingStep(stepIndex) {
   }
 }
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function normalizePhone(phone) {
+  return phone.replace(/\D/g, "");
+}
+
 function validateLeadFields(name, phone, email) {
   if (!name || !phone || !email) {
     showErrorMessage("Por favor, informe nome, e-mail e WhatsApp para prosseguir.");
+    return false;
+  }
+
+  if (!isValidEmail(email)) {
+    showErrorMessage("E-mail inválido. Informe um endereço de e-mail válido com @ e domínio.");
+    return false;
+  }
+
+  if (phone.length < 10 || phone.length > 13) {
+    showErrorMessage("WhatsApp inválido. Use apenas números e inclua DDD, por exemplo 11999990000.");
     return false;
   }
 
@@ -341,8 +359,9 @@ function validateLeadFields(name, phone, email) {
 
 async function submitLead() {
   const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const rawPhone = document.getElementById("phone").value.trim();
   const email = document.getElementById("email").value.trim();
+  const phone = normalizePhone(rawPhone);
 
   if (!validateLeadFields(name, phone, email)) {
     return;
@@ -368,6 +387,15 @@ async function submitLead() {
 
     updateLoadingStep(1);
     await sleep(850);
+
+    if (!checkResponse.ok) {
+      hideLoading();
+      document.getElementById("lead-screen").classList.remove("hidden");
+      showErrorMessage(
+        checkResult.message || "Não foi possível verificar o cadastro. Tente novamente mais tarde."
+      );
+      return;
+    }
 
     if (checkResult.exists) {
       hideLoading();
