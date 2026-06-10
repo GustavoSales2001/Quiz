@@ -1,44 +1,71 @@
 const questions = [
   {
-    key: "objetivo",
-    title: "Qual é o seu principal objetivo?",
+    key: "idade",
+    title: "Qual sua idade?",
     options: [
-      "Estudar inglês nos EUA",
-      "Fazer faculdade ou pós nos EUA",
-      "Conseguir uma bolsa de estudos",
-      "Entender como posso continuar nos EUA de forma regular"
+      "Menos de 18 anos",
+      "18 a 21 anos",
+      "22 a 25 anos",
+      "26 a 30 anos",
+      "Mais de 30 anos"
     ]
   },
   {
-    key: "interesse_bolsa",
-    title: "Você tem interesse em bolsa de estudos?",
+    key: "nivel_ingles",
+    title: "Qual seu nível de inglês?",
     options: [
-      "Sim, é minha prioridade",
-      "Sim, mas também quero entender outras opções",
-      "Talvez, depende dos requisitos",
-      "Não necessariamente, quero estudar fora mesmo sem bolsa"
+      "Iniciante",
+      "Intermediário",
+      "Avançado",
+      "Fluente"
     ]
   },
   {
-    key: "prazo",
-    title: "Em quanto tempo você quer iniciar esse plano?",
+    key: "ensino_medio",
+    title: "Você já concluiu o ensino médio?",
     options: [
-      "O quanto antes",
+      "Sim, já concluí",
+      "Estou concluindo atualmente",
+      "Não, ainda não concluí"
+    ]
+  },
+  {
+    key: "faculdade_atual",
+    title: "Está cursando faculdade atualmente?",
+    options: [
+      "Sim, estou cursando",
+      "Não, ainda não estou"
+    ]
+  },
+  {
+    key: "objetivo_academico",
+    title: "Qual seu objetivo acadêmico?",
+    options: [
+      "Graduação",
+      "Transferência",
+      "Pós-graduação",
+      "Mestrado",
+      "Doutorado"
+    ]
+  },
+  {
+    key: "quando_iniciar",
+    title: "Quando pretende iniciar seus estudos?",
+    options: [
       "Nos próximos 3 meses",
-      "Nos próximos 6 meses",
+      "Em 6 meses",
       "No próximo ano",
-      "Ainda não tenho prazo definido"
+      "Ainda não decidi"
     ]
   },
   {
-    key: "momento_academico",
-    title: "Qual é seu momento acadêmico atual?",
+    key: "investimento_mensal",
+    title: "Qual sua faixa de investimento mensal?",
     options: [
-      "Ensino médio em andamento",
-      "Ensino médio concluído",
-      "Faculdade em andamento",
-      "Faculdade concluída",
-      "Quero estudar inglês, independente da formação"
+      "Até R$ 1.000",
+      "R$ 1.000 - R$ 2.500",
+      "R$ 2.500 - R$ 5.000",
+      "Acima de R$ 5.000"
     ]
   }
 ];
@@ -158,31 +185,26 @@ function goBack() {
 }
 
 function classifyLead(data) {
-  const objetivo = data.objetivo;
-  const prazo = data.prazo;
+  const objetivo = data.objetivo_academico;
+  const prazo = data.quando_iniciar;
 
   let classificacao = "LEAD_INICIAL";
   let temperatura = "frio";
   let enviarSimpleDesk = false;
 
-  if (objetivo === "Entender como posso continuar nos EUA de forma regular") {
-    classificacao = "LEAD_COS";
-    temperatura = "quente";
-    enviarSimpleDesk = true;
-  } else if (
-    objetivo === "Fazer faculdade ou pós nos EUA" ||
-    objetivo === "Conseguir uma bolsa de estudos"
+  if (
+    objetivo === "Graduação" ||
+    objetivo === "Transferência" ||
+    objetivo === "Pós-graduação" ||
+    objetivo === "Mestrado" ||
+    objetivo === "Doutorado"
   ) {
     classificacao = "LEAD_TRANSFER";
     temperatura = "morno";
     enviarSimpleDesk = true;
-  } else {
-    classificacao = "LEAD_INICIAL";
-    temperatura = "morno";
-    enviarSimpleDesk = false;
   }
 
-  if (prazo === "O quanto antes" || prazo === "Nos próximos 3 meses") {
+  if (prazo === "Nos próximos 3 meses" || prazo === "Em 6 meses") {
     temperatura = "quente";
   }
 
@@ -245,7 +267,7 @@ function updateLoadingStep(stepIndex) {
 
 function validateLeadFields(name, phone, email) {
   if (!name || !phone || !email) {
-    showErrorMessage("Por favor, informe nome, WhatsApp e e-mail para prosseguir.");
+    showErrorMessage("Por favor, informe nome, e-mail e WhatsApp para prosseguir.");
     return false;
   }
 
@@ -364,26 +386,8 @@ function showResult(classification) {
   const title = document.getElementById("result-title");
   const text = document.getElementById("result-text");
 
-  const messages = {
-    LEAD_TRANSFER: {
-      title: "Seu perfil indica caminho transfer",
-      text: "Seu objetivo parece ligado a um processo de transferência ou mudança de curso/estudo nos EUA."
-    },
-    LEAD_COS: {
-      title: "Seu perfil indica caminho COS",
-      text: "Pelo que você respondeu, há conexão com necessidades de mudança de status ou continuidade regular nos EUA."
-    },
-    LEAD_INICIAL: {
-      title: "Seu perfil está em fase inicial",
-      text: "Você ainda parece estar no momento de pesquisa. Mesmo assim, suas respostas ajudam a indicar os melhores caminhos."
-    }
-  };
-
-  const selectedMessage =
-    messages[classification.classificacao] || messages.LEAD_INICIAL;
-
-  title.innerText = selectedMessage.title;
-  text.innerText = selectedMessage.text;
+  title.innerText = "Tudo certo!";
+  text.innerText = "Com base nas suas respostas, vamos analisar seu perfil e identificar possíveis oportunidades acadêmicas compatíveis com seus objetivos.";
 }
 
 function restartQuiz() {
